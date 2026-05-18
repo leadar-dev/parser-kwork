@@ -62,7 +62,9 @@ def _to_want(raw: RawWant) -> KworkWant | None:
         user_data = (raw.get("user") or {}).get("data") or {}
         hired_str = user_data.get("wants_hired_percent")
 
-        date_create = datetime.fromisoformat(raw["date_create"]).replace(tzinfo=UTC)
+        date_create = datetime.fromisoformat(raw["date_create"]).replace(
+            tzinfo=UTC,
+        )
         date_expire_str = raw.get("date_expire") or ""
         date_expire = (
             datetime.fromisoformat(date_expire_str).replace(tzinfo=UTC)
@@ -75,7 +77,9 @@ def _to_want(raw: RawWant) -> KworkWant | None:
             name=raw.get("name") or "",
             description=raw.get("description") or "",
             price_limit=float(raw.get("priceLimit") or 0),
-            possible_price_limit=float(raw["possiblePriceLimit"]) if raw.get("possiblePriceLimit") else None,
+            possible_price_limit=float(raw["possiblePriceLimit"])
+            if raw.get("possiblePriceLimit")
+            else None,
             category_id=int(raw.get("category_id") or 0),
             max_days=int(raw.get("max_days") or 0),
             status=raw.get("status") or "",
@@ -96,7 +100,10 @@ def _to_want(raw: RawWant) -> KworkWant | None:
 class KworkParser:
     def __init__(self, category_id: int | None = None) -> None:
         self.category_id = category_id
-        self.log = logger.bind(component="KworkParser", category_id=category_id)
+        self.log = logger.bind(
+            component="KworkParser",
+            category_id=category_id,
+        )
         self._cookies = _parse_cookies(cfg.kwork.cookies)
         self._headers = {
             "User-Agent": cfg.kwork.user_agent,
@@ -110,33 +117,56 @@ class KworkParser:
             params += f"&c={self.category_id}"
         return f"{cfg.kwork.base_url}/projects?{params}"
 
-    async def _fetch_page(self, client: httpx.AsyncClient, page: int) -> dict[str, Any]:
+    async def _fetch_page(
+        self,
+        client: httpx.AsyncClient,
+        page: int,
+    ) -> dict[str, Any]:
         url = self._build_url(page)
-        log = self.log.bind(func="_fetch_page", url=url, method="GET", page=page)
+        log = self.log.bind(
+            func="_fetch_page",
+            url=url,
+            method="GET",
+            page=page,
+        )
         log.debug("request")
 
         response = await client.get(url, follow_redirects=True)
-        log.info("response", status=response.status_code, size=len(response.content))
+        log.info(
+            "response",
+            status=response.status_code,
+            size=len(response.content),
+        )
 
         response.raise_for_status()
         return _extract_state_data(response.text)
 
-    async def iter_wants(self) -> AsyncGenerator[KworkWant, None]:
+    async def iter_wants(self) -> AsyncGenerator[KworkWant]:
         log = self.log.bind(func="iter_wants")
         log.info("start")
 
         async with httpx.AsyncClient(
-            headers=self._headers, cookies=self._cookies, timeout=30
+            headers=self._headers,
+            cookies=self._cookies,
+            timeout=30,
         ) as client:
             try:
                 state = await self._fetch_page(client, page=1)
             except Exception as e:
-                log.error("failed to fetch page 1", error=str(e), exc_info=True)
+                log.error(
+                    "failed to fetch page 1",
+                    error=str(e),
+                    exc_info=True,
+                )
                 return
 
             pagination = state.get("pagination") or {}
             last_page: int = pagination.get("last_page", 1)
-            log.info("listing info", pages=last_page, total=pagination.get("total", 0))
+            log.info(
+                "listing info",
+                pages=last_page,
+                total=pagination.get("total", 0),
+            )
 
             for raw in state.get("wants") or []:
                 want = _to_want(cast(RawWant, raw))

@@ -14,7 +14,12 @@ logger = get_logger().bind(service="parser-kwork", module=__name__)
 
 async def _is_new(dedup: aioredis.Redis, want_id: int) -> bool:
     key = f"kwork:want:{want_id}"
-    result = await dedup.set(key, "1", ex=cfg.dragonfly.dedup_ttl_seconds, nx=True)
+    result = await dedup.set(
+        key,
+        "1",
+        ex=cfg.dragonfly.dedup_ttl_seconds,
+        nx=True,
+    )
     return result is not None
 
 
@@ -35,7 +40,12 @@ async def _run_cycle(
             await publisher.publish(want)
             published += 1
 
-    log.info("done", total=total, published=published, skipped=total - published)
+    log.info(
+        "done",
+        total=total,
+        published=published,
+        skipped=total - published,
+    )
 
 
 async def main() -> None:
@@ -45,7 +55,8 @@ async def main() -> None:
     parser = KworkParser()
     publisher = KworkPublisher()
     dedup: aioredis.Redis = aioredis.from_url(
-        cfg.dragonfly.url, decode_responses=True
+        cfg.dragonfly.url,
+        decode_responses=True,
     )
 
     await publisher.start()

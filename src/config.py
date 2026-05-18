@@ -23,7 +23,7 @@ class Kwork(BaseModel):
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/124.0.0.0 Safari/537.36"
-        )
+        ),
     )
     cookies: str = Field(default="")
 
@@ -67,12 +67,14 @@ class Config(BaseSettings):
     def settings_customise_sources(
         cls,
         settings_cls: type[BaseSettings],
-        init_settings: PydanticBaseSettingsSource,
-        env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource,
+        init_settings: PydanticBaseSettingsSource,  # noqa: ARG003
+        env_settings: PydanticBaseSettingsSource,  # noqa: ARG003
+        dotenv_settings: PydanticBaseSettingsSource,  # noqa: ARG003
+        file_secret_settings: PydanticBaseSettingsSource,  # noqa: ARG003
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        sources: list[PydanticBaseSettingsSource] = [EnvSettingsSource(settings_cls)]
+        sources: list[PydanticBaseSettingsSource] = [
+            EnvSettingsSource(settings_cls),
+        ]
         if TOML_PATH.exists():
             sources.append(TomlConfigSettingsSource(settings_cls))
         return tuple(sources)

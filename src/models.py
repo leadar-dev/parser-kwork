@@ -72,4 +72,4 @@ class MessageEnvelope(TypedDict):
     event: str
     version: int
     timestamp: str
-    payload: dict[str, object]
+    payload: KworkWantPayload
