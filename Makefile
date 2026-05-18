@@ -10,18 +10,20 @@ run:
 .PHONY: lint
 lint:
 	@echo "→ Checking code style..."
-	@ruff check .
+	@uv run ruff format --check .
+	@uv run ruff check .
 
 .PHONY: format
 format:
 	@echo "→ Auto-fixing issues..."
-	@ruff check . --fix
+	@uv run ruff format .
+	@uv run ruff check . --fix
 	@echo "✓ Fixed"
 
 .PHONY: typecheck
 typecheck:
 	@echo "→ Type checking..."
-	@ty check
+	@uv run ty check
 
 .PHONY: check
 check: lint typecheck
