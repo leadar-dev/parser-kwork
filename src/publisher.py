@@ -13,7 +13,11 @@ logger = get_logger().bind(service="parser-kwork", module=__name__)
 _EXCHANGE_NAME = "leadar.events"
 _ROUTING_KEY = "parser.kwork.want"
 
-_exchange = RabbitExchange(_EXCHANGE_NAME, type=ExchangeType.TOPIC, durable=True)
+_exchange = RabbitExchange(
+    _EXCHANGE_NAME,
+    type=ExchangeType.TOPIC,
+    durable=True,
+)
 
 
 class KworkPublisher:
@@ -26,7 +30,7 @@ class KworkPublisher:
         self.log.info("connected", url=cfg.rabbitmq.url)
 
     async def stop(self) -> None:
-        await self._broker.close()
+        await self._broker.stop()
         self.log.info("disconnected")
 
     async def publish(self, want: KworkWant) -> None:
@@ -48,14 +52,16 @@ class KworkPublisher:
             "hired_percent": want.hired_percent,
             "url": want.url,
             "date_create": want.date_create.isoformat(),
-            "date_expire": want.date_expire.isoformat() if want.date_expire else None,
+            "date_expire": want.date_expire.isoformat()
+            if want.date_expire
+            else None,
         }
 
         envelope: MessageEnvelope = {
             "event": _ROUTING_KEY,
             "version": 1,
             "timestamp": datetime.now(UTC).isoformat(),
-            "payload": payload,  # type: ignore[assignment]
+            "payload": payload,
         }
 
         await self._broker.publish(
