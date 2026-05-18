@@ -48,7 +48,7 @@ exclude = [
     ".venv"
 ]
 [tool.ruff.lint]
-select = ["E", "F", "I", "COM812", "B", "C4", "ARG", "UP", "SIM", "ANN", "Q", "PLR"]
+select = ["E", "F", "I", "B", "C4", "ARG", "UP", "SIM", "ANN", "Q", "PLR"]
 ignore = [
     "E501", # Line too long
     "B904", # raise from err
