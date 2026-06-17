@@ -1,0 +1,88 @@
+[project]
+name = "parser-kwork"
+version = "0.1.0"
+description = "Парсер биржи Kwork для leadar"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "faststream[rabbit]==0.6.7",
+    "httpx==0.28.1",
+    "pydantic==2.12.5",
+    "pydantic-settings==2.13.1",
+    "redis==7.4.0",
+    "structlog==25.5.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.19.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[dependency-groups]
+dev = [
+    "ty==0.0.37",
+    "ruff==0.15.13",
+    "faker==37.12.0",
+    "hatchling==1.27.0",
+    "pre-commit==4.3.0",
+    "pytest==8.4.2",
+    "pytest-asyncio==1.2.0",
+    "pytest-cov==7.0.0",
+    "pytest-mock==3.15.1",
+]
+
+[tool.ruff]
+show-fixes = true
+unsafe-fixes = false
+line-length = 79
+target-version = "py313"
+src = [
+    "src",
+]
+exclude = [
+    ".venv"
+]
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "ARG", "UP", "SIM", "ANN", "Q", "PLR"]
+ignore = [
+    "E501", # Line too long
+    "B904", # raise from err
+    "PLR0913", # Too many arguments in function definition
+    "PLR0912", # Too many branches
+    "PLR0915", # Too many statements
+    "PLR2004", # Magic value in comparasion
+    "SIM117", # Single `with` stmt with multiple contexts
+    "ARG001", # Unused function argument
+    "ARG002", # Unused method argument
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed in `**kwargs`
+    "UP040", # Type checking `typing.TypeAlias` (introduced in Python 3.10)
+    "UP031", # C style formatting
+]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+skip-magic-trailing-comma = false
+indent-style = "space"
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.src]
+exclude = [
+    ".venv/**",
+]
+
+[tool.ty.rules]
+redundant-cast = "warn"
+too-many-positional-arguments = "ignore"
+unused-ignore-comment = "warn"
+possibly-missing-attribute = "ignore"
+unresolved-import = "ignore"
+missing-argument = "error"
+invalid-return-type = "error"
