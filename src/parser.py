@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
@@ -103,7 +104,7 @@ def _to_want_detail(raw: RawWant, tags: list[str]) -> KworkWantDetail | None:
     if base is None:
         return None
     try:
-        return KworkWantDetail(**base.model_dump(), tags=tags)
+        return KworkWantDetail(**dataclasses.asdict(base), tags=tags)
     except Exception as e:
         log.error("detail build failed", error=str(e), exc_info=True)
         return None
