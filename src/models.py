@@ -50,6 +50,10 @@ class KworkWant(BaseModel):
     date_expire: datetime | None
 
 
+class KworkWantDetail(KworkWant):
+    tags: list[str]
+
+
 class KworkWantPayload(TypedDict):
     source: str
     want_id: int
