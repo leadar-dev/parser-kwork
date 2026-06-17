@@ -10,7 +10,7 @@ import httpx
 
 from .config import cfg
 from .logger import get_logger
-from .models import KworkWant, RawWant
+from .models import KworkWant, KworkWantDetail, RawWant
 
 logger = get_logger().bind(service="parser-kwork", module=__name__)
 
@@ -97,6 +97,18 @@ def _to_want(raw: RawWant) -> KworkWant | None:
         return None
 
 
+def _to_want_detail(raw: RawWant, tags: list[str]) -> KworkWantDetail | None:
+    log = logger.bind(func="_to_want_detail", want_id=raw.get("id"))
+    base = _to_want(raw)
+    if base is None:
+        return None
+    try:
+        return KworkWantDetail(**base.model_dump(), tags=tags)
+    except Exception as e:
+        log.error("detail build failed", error=str(e), exc_info=True)
+        return None
+
+
 class KworkParser:
     def __init__(self, category_id: int | None = None) -> None:
         self.category_id = category_id
@@ -116,6 +128,40 @@ class KworkParser:
         if self.category_id:
             params += f"&c={self.category_id}"
         return f"{cfg.kwork.base_url}/projects?{params}"
+
+    async def fetch_want_detail(
+        self,
+        client: httpx.AsyncClient,
+        want_id: int,
+    ) -> KworkWantDetail | None:
+        url = f"{cfg.kwork.base_url}/projects/{want_id}/view"
+        log = self.log.bind(func="fetch_want_detail", want_id=want_id, url=url)
+        log.debug("request")
+
+        try:
+            response = await client.get(url, follow_redirects=True)
+            log.info(
+                "response",
+                status=response.status_code,
+                size=len(response.content),
+            )
+            response.raise_for_status()
+            state = _extract_state_data(response.text)
+        except Exception as e:
+            log.error("fetch failed", error=str(e), exc_info=True)
+            return None
+
+        raw_want = state.get("want")
+        if not raw_want:
+            log.warning("no want in stateData", keys=list(state.keys())[:10])
+            return None
+
+        raw_tags: list[Any] = raw_want.get("tags") or []
+        tags: list[str] = [
+            t["name"] if isinstance(t, dict) else str(t) for t in raw_tags if t
+        ]
+
+        return _to_want_detail(cast(RawWant, raw_want), tags)
 
     async def _fetch_page(
         self,
