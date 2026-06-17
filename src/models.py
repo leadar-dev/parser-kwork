@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TypedDict
-
-from pydantic import BaseModel
 
 
 class WantUserData(TypedDict):
@@ -33,7 +32,8 @@ class RawWant(TypedDict):
     user: WantUser
 
 
-class KworkWant(BaseModel):
+@dataclass
+class KworkWant:
     want_id: int
     name: str
     description: str
@@ -50,6 +50,7 @@ class KworkWant(BaseModel):
     date_expire: datetime | None
 
 
+@dataclass
 class KworkWantDetail(KworkWant):
     tags: list[str]
 
