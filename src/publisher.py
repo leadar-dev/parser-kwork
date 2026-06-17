@@ -10,6 +10,11 @@ from .models import KworkWant, KworkWantPayload, MessageEnvelope
 
 logger = get_logger().bind(service="parser-kwork", module=__name__)
 
+
+def _fmt_utc(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 _EXCHANGE_NAME = "leadar.events"
 _ROUTING_KEY = "parser.kwork.want"
 
@@ -51,8 +56,8 @@ class KworkPublisher:
             "views": want.views,
             "hired_percent": want.hired_percent,
             "url": want.url,
-            "date_create": want.date_create.isoformat(),
-            "date_expire": want.date_expire.isoformat()
+            "date_create": _fmt_utc(want.date_create),
+            "date_expire": _fmt_utc(want.date_expire)
             if want.date_expire
             else None,
         }
@@ -60,7 +65,7 @@ class KworkPublisher:
         envelope: MessageEnvelope = {
             "event": _ROUTING_KEY,
             "version": 1,
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": _fmt_utc(datetime.now(UTC)),
             "payload": payload,
         }
 
