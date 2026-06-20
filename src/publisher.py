@@ -6,7 +6,13 @@ from faststream.rabbit import ExchangeType, RabbitBroker, RabbitExchange
 
 from .config import cfg
 from .logger import get_logger
-from .models import KworkWant, KworkWantPayload, MessageEnvelope
+from .models import (
+    KworkCategoriesPayload,
+    KworkCategory,
+    KworkWant,
+    KworkWantPayload,
+    MessageEnvelope,
+)
 
 logger = get_logger().bind(service="parser-kwork", module=__name__)
 
@@ -75,3 +81,29 @@ class KworkPublisher:
             exchange=_exchange,
         )
         log.info("done", routing_key=_ROUTING_KEY, name=want.name)
+
+    async def publish_categories(
+        self, categories: list[KworkCategory]
+    ) -> None:
+        log = self.log.bind(func="publish_categories", count=len(categories))
+        log.debug("start")
+
+        payload: KworkCategoriesPayload = {
+            "source": "kwork",
+            "categories": categories,
+        }
+
+        routing_key = "parser.kwork.categories"
+        envelope: MessageEnvelope = {
+            "event": routing_key,
+            "version": 1,
+            "timestamp": _fmt_utc(datetime.now(UTC)),
+            "payload": payload,
+        }
+
+        await self._broker.publish(
+            envelope,
+            routing_key=routing_key,
+            exchange=_exchange,
+        )
+        log.info("done", routing_key=routing_key, count=len(categories))
