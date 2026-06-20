@@ -11,7 +11,7 @@ import httpx
 
 from .config import cfg
 from .logger import get_logger
-from .models import KworkWant, KworkWantDetail, RawWant
+from .models import KworkCategory, KworkWant, KworkWantDetail, RawWant
 
 logger = get_logger().bind(service="parser-kwork", module=__name__)
 
@@ -243,3 +243,52 @@ class KworkParser:
                 page_log.info("page done", count=len(wants))
 
         log.info("done")
+
+    async def fetch_categories(self) -> list[KworkCategory]:
+        log = self.log.bind(func="fetch_categories")
+        log.info("start")
+
+        async with httpx.AsyncClient(
+            headers=self._headers,
+            cookies=self._cookies,
+            timeout=30,
+        ) as client:
+            try:
+                state = await self._fetch_page(client, page=1)
+            except Exception as e:
+                log.error("fetch failed", error=str(e), exc_info=True)
+                return []
+
+        categories_raw = state.get("categories")
+        if not categories_raw:
+            log.warning(
+                "categories not found in stateData",
+                available_keys=list(state.keys())[:15],
+            )
+            return []
+
+        items: list[Any] = (
+            list(categories_raw.values())
+            if isinstance(categories_raw, dict)
+            else categories_raw
+        )
+
+        result: list[KworkCategory] = []
+        for raw in items:
+            if not isinstance(raw, dict):
+                continue
+            try:
+                result.append(
+                    KworkCategory(
+                        external_id=int(raw["id"]),
+                        name=str(raw.get("name") or ""),
+                        parent_external_id=int(raw["parent_id"])
+                        if raw.get("parent_id")
+                        else None,
+                    )
+                )
+            except Exception as e:
+                log.warning("skip category", raw=raw, error=str(e))
+
+        log.info("done", count=len(result))
+        return result

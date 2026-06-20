@@ -72,6 +72,12 @@ async def main() -> None:
 
     await publisher.start()
     try:
+        categories = await parser.fetch_categories()
+        if categories:
+            await publisher.publish_categories(categories)
+        else:
+            log.warning("no categories fetched, skipping publish")
+
         while True:
             try:
                 await _run_cycle(parser, publisher, dedup)

@@ -73,8 +73,19 @@ class KworkWantPayload(TypedDict):
     date_expire: str | None
 
 
+class KworkCategory(TypedDict):
+    external_id: int
+    name: str
+    parent_external_id: int | None
+
+
+class KworkCategoriesPayload(TypedDict):
+    source: str
+    categories: list[KworkCategory]
+
+
 class MessageEnvelope(TypedDict):
     event: str
     version: int
     timestamp: str
-    payload: KworkWantPayload
+    payload: KworkWantPayload | KworkCategoriesPayload
